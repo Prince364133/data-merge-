@@ -6,6 +6,7 @@
   <title>Number Frequency Analyzer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.2/xlsx.full.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -51,6 +52,16 @@
     th {
       background-color: #f4f4f4;
     }
+    .filter-section {
+      margin: 10px 0;
+    }
+    .filter-section label {
+      margin-right: 10px;
+    }
+    .filter-section input {
+      margin-right: 10px;
+      padding: 5px;
+    }
     @media screen and (max-width: 600px) {
       textarea {
         font-size: 14px;
@@ -62,12 +73,30 @@
   <h2>Number Frequency Analyzer</h2>
   <textarea id="inputData" placeholder="Enter comma-separated numbers, like: 78,106,500,106,78,500,9999,9882,9882,9"></textarea>
   <br/>
+
+  <!-- Filter Section -->
+  <div class="filter-section">
+    <label for="minFrequency">Minimum Frequency:</label>
+    <input type="number" id="minFrequency" value="1" min="1" placeholder="Min Frequency" />
+    
+    <label for="maxFrequency">Maximum Frequency:</label>
+    <input type="number" id="maxFrequency" value="100" min="1" placeholder="Max Frequency" />
+    
+    <label for="limitNumbers">Show First:</label>
+    <input type="number" id="limitNumbers" value="100" min="1" placeholder="Limit to numbers" />
+  </div>
+
   <button onclick="processNumbers()">Generate Table</button>
   <button onclick="copyTable()">Copy Table</button>
   <button onclick="downloadPDF()">Download as PDF</button>
+  <button onclick="downloadExcel()">Download as Excel</button>
+
   <div id="result"></div>
 
   <script>
+    let frequencyMap = new Map();
+
+    // Function to process and filter numbers
     function processNumbers() {
       const input = document.getElementById("inputData").value;
       const numberList = input
@@ -75,12 +104,29 @@
         .map(num => num.trim())
         .filter(num => /^[0-9]+$/.test(num)); // Only valid numeric strings
 
-      const frequencyMap = new Map();
+      frequencyMap.clear(); // Reset frequency map
 
+      // Count frequency of each number
       numberList.forEach(num => {
         frequencyMap.set(num, (frequencyMap.get(num) || 0) + 1);
       });
 
+      const minFrequency = parseInt(document.getElementById("minFrequency").value);
+      const maxFrequency = parseInt(document.getElementById("maxFrequency").value);
+      const limitNumbers = parseInt(document.getElementById("limitNumbers").value);
+
+      // Filter the numbers based on frequency range
+      let filteredMap = new Map(
+        [...frequencyMap].filter(([_, count]) => count >= minFrequency && count <= maxFrequency)
+      );
+
+      // Sort numbers in ascending order based on the number value (not frequency)
+      filteredMap = new Map([...filteredMap].sort((a, b) => a[0] - b[0]));
+
+      // Limit the result to the first N numbers based on the input
+      const limitedMap = new Map([...filteredMap].slice(0, limitNumbers));
+
+      // Generate table HTML
       let html = `
         <table id="outputTable">
           <thead>
@@ -94,7 +140,7 @@
       `;
 
       let index = 1;
-      for (let [number, count] of frequencyMap.entries()) {
+      for (let [number, count] of limitedMap.entries()) {
         html += `
           <tr>
             <td>${index++}</td>
@@ -108,6 +154,7 @@
       document.getElementById("result").innerHTML = html;
     }
 
+    // Function to copy table to clipboard
     function copyTable() {
       const table = document.getElementById("outputTable");
       if (!table) return;
@@ -119,11 +166,20 @@
       navigator.clipboard.writeText(text).then(() => alert("Table copied to clipboard!"));
     }
 
+    // Function to download table as PDF
     function downloadPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
       doc.autoTable({ html: '#outputTable' });
       doc.save('number_report.pdf');
+    }
+
+    // Function to download table as Excel file
+    function downloadExcel() {
+      const ws = XLSX.utils.table_to_sheet(document.getElementById('outputTable'));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Number Data');
+      XLSX.writeFile(wb, 'number_report.xlsx');
     }
   </script>
 </body>
