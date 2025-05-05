@@ -1,15 +1,16 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contact Data Parser</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Number Repetition Checker</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      max-width: 1000px;
+      max-width: 800px;
       margin: auto;
     }
     textarea {
@@ -25,7 +26,7 @@
     th, td {
       border: 1px solid #ccc;
       padding: 8px;
-      text-align: left;
+      text-align: center;
     }
     th {
       background-color: #f2f2f2;
@@ -41,57 +42,44 @@
     button:hover {
       background-color: #0056b3;
     }
-    @media screen and (max-width: 768px) {
-      body {
-        padding: 10px;
-      }
-    }
   </style>
 </head>
 <body>
-  <h2>Contact Data Formatter</h2>
-  <textarea id="inputData" placeholder="Enter data like: Prince 6205170591 hi, John 9816805080 hello,"></textarea>
-  <br />
-  <button onclick="processData()">Generate Table</button>
+  <h2>Repeated Numbers Finder</h2>
+  <textarea id="inputData" placeholder="Enter numbers like: 78, 106, 500, 78, 106, 999..."></textarea><br>
+  <button onclick="processNumbers()">Generate Table</button>
   <button onclick="copyTable()">Copy Table</button>
-  <button onclick="downloadPDF()">Download as PDF</button>  <div id="tableContainer"></div>  <script>
-    function processData() {
-      const input = document.getElementById("inputData").value;
-      const entries = input.split(',');
-      const map = new Map();
+  <button onclick="downloadPDF()">Download as PDF</button>
+  <div id="tableContainer"></div>
 
-      entries.forEach(raw => {
-        const parts = raw.trim().split(/\s+/);
-        if (parts.length >= 2) {
-          const name = parts[0];
-          const number = parts[1];
-          const other = parts.slice(2).join(' ');
-          const key = name + '_' + number;
-          if (map.has(key)) {
-            const existing = map.get(key);
-            existing.count += 1;
-            if (other) existing.other.push(other);
-          } else {
-            map.set(key, { name, number, count: 1, other: other ? [other] : [] });
-          }
-        }
+  <script>
+    function processNumbers() {
+      const input = document.getElementById("inputData").value;
+      const numbers = input.split(',').map(n => n.trim()).filter(n => n);
+      const countMap = {};
+
+      numbers.forEach(num => {
+        countMap[num] = (countMap[num] || 0) + 1;
       });
 
-      let html = `<table id="outputTable"><thead><tr>
-                    <th>Serial No.</th><th>Name</th><th>Number</th><th>Repeated Times</th><th>Other Data</th>
-                  </tr></thead><tbody>`;
+      let html = `<table id="outputTable">
+        <thead>
+          <tr><th>Serial No.</th><th>Number</th><th>Repeated Times</th></tr>
+        </thead><tbody>`;
+
       let index = 1;
-      for (let [_, data] of map) {
-        html += `<tr>
+      for (let num in countMap) {
+        if (countMap[num] > 1) {
+          html += `<tr>
                     <td>${index++}</td>
-                    <td>${data.name}</td>
-                    <td>${data.number}</td>
-                    <td>${data.count}</td>
-                    <td>${data.other.join(' | ')}</td>
-                 </tr>`;
+                    <td>${num}</td>
+                    <td>${countMap[num]}</td>
+                   </tr>`;
+        }
       }
+
       html += '</tbody></table>';
-      document.getElementById("tableContainer").innerHTML = html;
+      document.getElementById("tableContainer").innerHTML = html || "<p>No repeated numbers found.</p>";
     }
 
     function copyTable() {
@@ -109,7 +97,8 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
       doc.autoTable({ html: '#outputTable' });
-      doc.save('contact_data.pdf');
+      doc.save('repeated_numbers.pdf');
     }
-  </script></body>
+  </script>
+</body>
 </html>
