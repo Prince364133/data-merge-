@@ -67,6 +67,33 @@
         font-size: 14px;
       }
     }
+    #manual {
+  display: none;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border: 1px solid #ccc;
+  margin-top: 20px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.question-mark-btn {
+  background-color: #28a745;
+  color: white;
+  font-size: 18px;
+  padding: 10px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+.question-mark-btn:hover {
+  background-color: #218838;
+}
   </style>
 </head>
 <body>
@@ -92,7 +119,21 @@
   <button onclick="downloadExcel()">Download as Excel</button>
 
   <div id="result"></div>
+<!-- Question Mark Help Button -->
+<button class="question-mark-btn" onclick="toggleManual()">?</button>
 
+<!-- Help Manual (Initially Hidden) -->
+<div id="manual">
+  <h3>How to Use:</h3>
+  <ol>
+    <li><strong>Text Input:</strong> Enter a list of comma-separated numbers in the text box.</li>
+    <li><strong>Frequency Filters:</strong> Set the minimum and maximum frequency to filter the results.</li>
+    <li><strong>Limit Numbers:</strong> Set the "Show First" value to limit the number of rows (e.g., 1 to 100).</li>
+    <li><strong>Generate Table:</strong> Click the "Generate Table" button to see the results.</li>
+    <li><strong>Actions:</strong> You can copy the table, download it as a PDF, or export it as an Excel file.</li>
+  </ol>
+</div>
+  
   <script>
     let frequencyMap = new Map();
 
@@ -181,6 +222,10 @@
       XLSX.utils.book_append_sheet(wb, ws, 'Number Data');
       XLSX.writeFile(wb, 'number_report.xlsx');
     }
+    function toggleManual() {
+  const manual = document.getElementById("manual");
+  manual.style.display = manual.style.display === "none" || manual.style.display === "" ? "block" : "none";
+}
   </script>
 </body>
 </html>
