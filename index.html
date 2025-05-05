@@ -3,125 +3,109 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Repeated Number Checker</title>
+  <title>Number Frequency Analyzer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 30px;
-      background: #f9f9f9;
+      font-family: Arial, sans-serif;
+      padding: 20px;
       max-width: 900px;
       margin: auto;
-      color: #333;
     }
-
     h2 {
       text-align: center;
-      color: #222;
+      color: #333;
     }
-
     textarea {
       width: 100%;
-      height: 120px;
+      height: 150px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      padding: 10px;
       border: 1px solid #ccc;
       border-radius: 6px;
-      padding: 10px;
-      font-size: 16px;
-      margin-bottom: 20px;
-      resize: vertical;
     }
-
-    .button-group {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
     button {
-      margin: 5px;
-      padding: 10px 20px;
-      font-size: 15px;
+      padding: 10px 15px;
+      margin: 5px 5px 10px 0;
       border: none;
-      border-radius: 5px;
-      background-color: #4CAF50;
+      border-radius: 4px;
+      background-color: #007bff;
       color: white;
       cursor: pointer;
-      transition: background-color 0.3s ease;
     }
-
     button:hover {
-      background-color: #45a049;
+      background-color: #0056b3;
     }
-
     table {
       width: 100%;
-      border-collapse: collapse;
       margin-top: 20px;
-      background-color: white;
+      border-collapse: collapse;
     }
-
     th, td {
-      border: 1px solid #ddd;
       padding: 10px;
       text-align: center;
+      border: 1px solid #ddd;
     }
-
     th {
-      background-color: #007BFF;
-      color: white;
+      background-color: #f4f4f4;
     }
-
-    tr:nth-child(even) {
-      background-color: #f2f2f2;
-    }
-
-    @media (max-width: 600px) {
+    @media screen and (max-width: 600px) {
       textarea {
-        height: 100px;
-      }
-
-      button {
-        padding: 8px 16px;
         font-size: 14px;
       }
     }
   </style>
 </head>
 <body>
-  <h2>Repeated Number Checker</h2>
-  <textarea id="inputData" placeholder="Enter comma-separated numbers, e.g., 90, 100, 9882, 9882, 568, 82..."></textarea>
-  <div class="button-group">
-    <button onclick="processNumbers()">Generate Table</button>
-    <button onclick="copyTable()">Copy the Table</button>
-    <button onclick="downloadPDF()">Download as PDF</button>
-  </div>
-  <div id="tableContainer"></div>
+  <h2>Number Frequency Analyzer</h2>
+  <textarea id="inputData" placeholder="Enter comma-separated numbers, like: 78,106,500,106,78,500,9999,9882,9882,9"></textarea>
+  <br/>
+  <button onclick="processNumbers()">Generate Table</button>
+  <button onclick="copyTable()">Copy Table</button>
+  <button onclick="downloadPDF()">Download as PDF</button>
+  <div id="result"></div>
 
   <script>
     function processNumbers() {
       const input = document.getElementById("inputData").value;
-      const rawNumbers = input.split(',').map(num => num.trim()).filter(num => /^\d+$/.test(num));
-      const frequency = {};
-      rawNumbers.forEach(num => {
-        frequency[num] = (frequency[num] || 0) + 1;
+      const numberList = input
+        .split(',')
+        .map(num => num.trim())
+        .filter(num => /^[0-9]+$/.test(num)); // Only valid numeric strings
+
+      const frequencyMap = new Map();
+
+      numberList.forEach(num => {
+        frequencyMap.set(num, (frequencyMap.get(num) || 0) + 1);
       });
 
-      let html = `<table id="outputTable">
-        <thead>
-          <tr><th>Serial No.</th><th>Number</th><th>Repeated Times</th></tr>
-        </thead><tbody>`;
+      let html = `
+        <table id="outputTable">
+          <thead>
+            <tr>
+              <th>Serial No.</th>
+              <th>Number</th>
+              <th>Repeated Times</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
 
       let index = 1;
-      let hasRepeats = false;
-      for (let num in frequency) {
-        if (frequency[num] > 1) {
-          hasRepeats = true;
-          html += `<tr><td>${index++}</td><td>${num}</td><td>${frequency[num]}</td></tr>`;
-        }
+      for (let [number, count] of frequencyMap.entries()) {
+        html += `
+          <tr>
+            <td>${index++}</td>
+            <td>${number}</td>
+            <td>${count}</td>
+          </tr>
+        `;
       }
 
-      html += `</tbody></table>`;
-      document.getElementById("tableContainer").innerHTML = hasRepeats ? html : "<p style='text-align:center;'>No repeated numbers found.</p>";
+      html += '</tbody></table>';
+      document.getElementById("result").innerHTML = html;
     }
 
     function copyTable() {
@@ -139,7 +123,7 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
       doc.autoTable({ html: '#outputTable' });
-      doc.save('repeated_numbers.pdf');
+      doc.save('number_report.pdf');
     }
   </script>
 </body>
